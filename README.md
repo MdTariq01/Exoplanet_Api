@@ -1,7 +1,10 @@
 
 🚀**Exoplanet Prediction API**
 
-A FastAPI-based machine learning API that predicts whether a celestial body is an Exoplanet or Not Exoplanet based on input CSV data.
+A FastAPI-based machine learning API that predicts whether a celestial body is an Exoplanet or Not Exoplanet based on input CSV data. 
+
+**Here the API Key-**
+https://exoplanet-api-cxu0.onrender.com
 
 📂 **Project Structure**
 
