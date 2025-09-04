@@ -58,7 +58,7 @@ GET /
 
 Response:
 
-{"message": "Welcome to Exoplanet API"}
+{"message": "✅ Exoplanet Detection API is running!"}
 
 Predict from CSV
 POST /predict_json/
