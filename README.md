@@ -6,6 +6,7 @@ A FastAPI-based machine learning API that predicts whether a celestial body is a
 **Here the API Key-**
 https://exoplanet-api-cxu0.onrender.com
 
+
 📂 **Project Structure**
 
 ├── main.py             # FastAPI application
