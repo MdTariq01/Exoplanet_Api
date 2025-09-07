@@ -1,86 +1,49 @@
+# 🚀 Exoplanet Prediction API  
 
-🚀**Exoplanet Prediction API**
+A FastAPI-based machine learning API that predicts whether a celestial body is an **Exoplanet** or **Not Exoplanet** from input CSV data.  
 
-A FastAPI-based machine learning API that predicts whether a celestial body is an Exoplanet or Not Exoplanet based on input CSV data. 
+🔑 Live API: [https://exoplanet-api-cxu0.onrender.com](https://exoplanet-api-cxu0.onrender.com)  
 
-**Here the API Key-**
-https://exoplanet-api-cxu0.onrender.com
+---
 
+## 📌 Overview  
+This project uses a trained **Random Forest pipeline** to classify celestial objects as Exoplanets or Not Exoplanets.  
+The API is built with **FastAPI**, supports **CSV uploads**, and returns predictions in **JSON format**.  
 
-📂 **Project Structure**
+---
 
-├── main.py             # FastAPI application
+## 📂 Project Structure  
+Exoplanet_Api/
 
-├── requirements.txt    # Project dependencies
+├── main.py # FastAPI application
 
-├── Procfile            # Deployment instructions (Render/Heroku)
+├── requirements.txt # Project dependencies
 
-├── rf_pipeline.pkl     # Trained ML model
+├── Procfile # Deployment instructions (Render/Heroku)
 
-⚡ **Features**
-
-REST API built with FastAPI
-Supports CSV upload for predictions
-Deployed on Render
-Returns results in JSON format
-
-🛠 **Installation & Setup**
-
-1️⃣ Clone the repo
-git clone https://github.com/MdTariq01/Exoplanet_Api.git
-cd Exoplanet_Api
-
-2️⃣ Create virtual environment-
-
-    python -m venv venv
-
-    source venv/bin/activate   # Linux / Mac
-
-    venv\Scripts\activate      # Windows
+├── rf_pipeline.pkl # Trained ML model
 
 
-3️⃣ Install dependencies
-pip install -r requirements.txt
+---
 
-4️⃣ Run the API locally
-uvicorn main:app --reload
+## ⚡ Features  
+- REST API with FastAPI  
+- CSV upload for batch predictions  
+- Returns results in JSON  
+- Swagger UI for easy testing (`/docs`)  
+- Deployed on Render (Heroku-compatible)  
 
+---
 
-Now visit 👉 http://127.0.0.1:8000/docs for Swagger UI.
+## 🧑‍💻 Tech Stack
 
-🌍 **Deployment**
+- FastAPI
 
-This project is configured for deployment on Render (works on Heroku too).
+- Uvicorn
 
-Example Procfile:
-web: uvicorn main:app --host 0.0.0.0 --port $PORT
+- Render / Heroku
 
-📡 **API Endpoints**
+---
+**Feel free to Use it**
 
-Health Check
-GET /
-
-Response:
-
-{"message": "✅ Exoplanet Detection API is running!"}
-
-Predict from CSV
-POST /predict_json/
-
-Body (form-data):
-
-file: CSV file containing input features
-
-Response:
-
-{
-  "predictions": ["Exoplanet", "Not Exoplanet"]
-}
-
-🧑‍💻 **Tech Stack**
-
-FastAPI (API framework)
-
-Uvicorn (server)
-
-Render (deployment)
+ **Happy Coding** 🌟
