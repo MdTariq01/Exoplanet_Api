@@ -5,3 +5,4 @@ pandas
 joblib
 numpy
 python-multipart
+Flask==2.3.4
