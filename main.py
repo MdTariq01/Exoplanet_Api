@@ -1,63 +1,105 @@
-from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import StreamingResponse, JSONResponse
-from pydantic import BaseModel
-from typing import List
+from flask import Flask, request, jsonify, send_from_directory, render_template_string
 import pandas as pd
 import joblib
-import io
+import numpy as np
+import os
 
+app = Flask(__name__)
 
-app = FastAPI(title="Exoplanet Detection API")
+# Add CORS headers manually
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
 
-model = joblib.load("rf_pipeline.pkl")
+# Load the model when the server starts
+model_path = "rf_pipeline.pkl"
+if os.path.exists(model_path):
+    pipeline = joblib.load(model_path)
+    print("✅ Model loaded successfully!")
+else:
+    print("❌ Model file not found!")
+    pipeline = None
 
-
-class PredictionResponse(BaseModel):
-    predictions: List[str]
-
-async def read_csv_file(file: UploadFile):
-    if not file.filename.endswith(".csv"):
-        raise ValueError("Invalid file format. Please upload a .csv file")
-
-    contents = await file.read()
+@app.route('/predict', methods=['POST', 'OPTIONS'])
+def predict():
+    if request.method == 'OPTIONS':
+        return '', 200
     try:
-        df = pd.read_csv(io.StringIO(contents.decode("utf-8")))
+        # Get the CSV data from the request
+        csv_data = request.json.get('data')
+        
+        if not csv_data:
+            return jsonify({'error': 'No data provided'}), 400
+        
+        # Convert to DataFrame
+        df = pd.DataFrame(csv_data)
+        
+        # Ensure we have the required columns in the right order
+        required_columns = [
+            'koi_fpflag_nt', 'koi_fpflag_ss', 'koi_fpflag_co', 'koi_fpflag_ec',
+            'koi_period', 'koi_impact', 'koi_duration', 'koi_depth',
+            'koi_prad', 'koi_teq', 'koi_insol', 'koi_model_snr',
+            'koi_steff', 'koi_slogg', 'koi_srad', 'koi_kepmag'
+        ]
+        
+        # Reorder columns to match model expectations
+        df_reordered = df[required_columns]
+        
+        # Make predictions
+        if pipeline is None:
+            return jsonify({'error': 'Model not loaded'}), 500
+            
+        predictions = pipeline.predict(df_reordered)
+        probabilities = pipeline.predict_proba(df_reordered)
+        
+        # Format results
+        results = []
+        for i, (pred, prob) in enumerate(zip(predictions, probabilities)):
+            results.append({
+                'index': i + 1,
+                'prediction': int(pred),
+                'is_exoplanet': bool(pred == 1),
+                'confidence': float(max(prob)),  # Maximum probability
+                'exoplanet_probability': float(prob[1]) if len(prob) > 1 else float(prob[0]),
+                'false_positive_probability': float(prob[0]) if len(prob) > 1 else float(prob[0])
+            })
+        
+        return jsonify({
+            'success': True,
+            'predictions': results,
+            'total_samples': len(results)
+        })
+        
     except Exception as e:
-        raise ValueError(f"Error reading CSV: {str(e)}")
-    return df
+        return jsonify({'error': str(e)}), 500
 
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({
+        'status': 'healthy',
+        'model_loaded': pipeline is not None
+    })
 
-@app.post("/predict_csv/")
-async def predict_csv(file: UploadFile = File(...)):
+@app.route('/')
+def index():
+    """Serve the main HTML interface"""
     try:
-        df = await read_csv_file(file)
-        predictions = model.predict(df)
-        df["prediction"] = predictions
+        return send_from_directory('.', 'index.html')
+    except FileNotFoundError:
+        return "HTML file not found. Please make sure index.html is in the same directory as app.py", 404
 
-        output = io.StringIO()
-        df.to_csv(output, index=False)
-        output.seek(0)
-
-        return StreamingResponse(
-            iter([output.getvalue()]),
-            media_type="text/csv",
-            headers={"Content-Disposition": "attachment; filename=predictions.csv"}
-        )
-    except ValueError as e:
-        return JSONResponse(status_code=400, content={"error": str(e)})
-
-
-@app.post("/predict_json/", response_model=PredictionResponse)
-async def predict_json(file: UploadFile = File(...)):
+@app.route('/<path:filename>')
+def static_files(filename):
+    """Serve static files (CSS, JS)"""
     try:
-        df = await read_csv_file(file)
-        predictions = model.predict(df)
-        readable = ["Exoplanet" if p == 1 else "Not Exoplanet" for p in predictions]
-        return {"predictions": readable}
-    except ValueError as e:
-        return JSONResponse(status_code=400, content={"error": str(e)})
+        return send_from_directory('.', filename)
+    except FileNotFoundError:
+        return f"File {filename} not found", 404
 
-
-@app.get("/")
-def home():
-    return {"message": "✅ Exoplanet Detection API is running!"}
+if __name__ == '__main__':
+    print("🚀 Starting Exoplanet Prediction Server...")
+    print("📊 Model Status:", "✅ Loaded" if pipeline else "❌ Not Loaded")
+    app.run(debug=True, host='0.0.0.0', port=5000)
